@@ -1,4 +1,4 @@
-# MalariaGEN conda and texlive environment
+  # MalariaGEN conda and texlive environment
 
 This repository contains installation scripts and environment
 definitions for conda and texlive, for standardising environments
@@ -127,6 +127,47 @@ repo to your user account, then clone:
 
 ```
 git clone git@github.com:yourusername/mgenv.git
+```
+
+### Test a new environment version locally
+
+When changing a package version or adding a package, test the resolved
+environment before proposing the change. The pinned environment files
+are used for normal installs, so remove the file for your current platform
+in your local clone to make the install script resolve the unpinned
+requirements again. Run these commands from the root of a repository that
+uses `mgenv` as a submodule:
+
+```bash
+case "$(uname)" in
+  Darwin) platform=macos-latest ;;
+  Linux) platform=ubuntu-latest ;;
+  *) echo "Unsupported platform: $(uname)"; exit 1 ;;
+esac
+rm "mgenv/environment-pinned-${platform}.yml"
+./mgenv/install-conda.sh
+```
+
+The script recreates the environment from `requirements-conda.txt`, the
+platform-specific compiler requirements, and `requirements-pypi.txt`, then
+writes a fresh pinned file for the current platform. Activate the environment
+and run the checks used by that repository (for this repository,
+`source mgenv/env.sh` and `python mgenv/imports.py`). If you are only
+testing locally, restore the original pinned file afterwards. On Linux,
+run `git -C mgenv checkout -- environment-pinned-ubuntu-latest.yml`; on
+macOS, run `git -C mgenv checkout -- environment-pinned-macos-latest.yml`.
+Keep the generated file if your change updates the pinned environment.
+Windows is not currently supported by `install-conda.sh`.
+
+For the full environment verification used by this repository, run:
+
+```bash
+./install-conda.sh
+source ./env.sh
+python imports.py
+samtools --version
+bcftools --version
+tabix --version
 ```
 
 Update your local master branch:
